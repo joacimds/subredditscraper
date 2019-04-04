@@ -1,0 +1,17 @@
+# [description name], [coin name], [coin code], [subreddit], [twitter] (Any can be None except description name)
+Bitcoin , bitcoin , BTC , bitcoin , None
+Neo , Neo , NEO , NEO , neo , None
+Ethereum , Ether , ETH , ethereum , None
+siacoin , siacoin , SC , siacoin , None
+Dash , Dash , DASH , dashpay , None
+Monero , monero , XMR , monero , None
+Lykke , lykke , LKK , lykke , None
+Cryptocurrency , None , None , cryptocurrency , None
+Aeon , Aeon , AEON , aeon , None
+Blocknet , Block , BLOCK , theblocknet , None
+Particl , Particl , PART , particl , None
+Factom , Factom , FCT , factom , None
+Binance , Binance Coin , BNB , binance , None
+AdEx , Adex , ADX , adex , None
+Nexus , Nexus , NXS , nexusearth , None
+Monetha , Monetha , MTH , monetha , None
