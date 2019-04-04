@@ -252,7 +252,7 @@ class Currency_cointainer:
 
 
 def main():
-	print("\n\n")
+	logging.debug("\n\n")
 	container = Currency_cointainer()
 	
 	while True:
@@ -267,11 +267,11 @@ def main():
 		except requests.ConnectionError:
 			logging.error("No connection. Trying again in {} minutes.".format(update_time))
 
-		#print("{}\t{}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))
-		#print("Sleeping...")
-		#time.sleep(60 * update_time)
-		#print("Finished sleeping: \n")
-		#print("{}\t{}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))
+		logging.debug("{}\t{}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))
+		logging.debug("Sleeping...")
+		time.sleep(60 * update_time)
+		logging.debug("Finished sleeping: \n")
+		logging.debug("{}\t{}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))
 		break
 	#print("Epoch time: {}".format(calendar.timegm(time.gmtime())))
 	logging.debug("Finished logging at: {} {}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))
