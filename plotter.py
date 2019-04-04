@@ -1,4 +1,4 @@
-import bot_2
+import bot
 import matplotlib.pyplot as plt
 
 def two_scales(ax1, time, data1, data2, c1, c2):

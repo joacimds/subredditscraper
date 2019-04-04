@@ -65,7 +65,7 @@ class Currency:
 					self._usd_value[splitlist[0]] = splitlist[2].replace('\n', '')
 
 		else:
-			logging.error(f"No data for {self._desc_name} - data: {self._coin_short}")
+			logging.debug(f"No marketcap data for {self._desc_name} - data: {self._coin_short}")
 
 	def get_coin_short(self):
 		if self._coin_short != 'None':
