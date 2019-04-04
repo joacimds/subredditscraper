@@ -2,7 +2,7 @@
 
 A super simple subreddit scraper. Implemented to track cryptocurrency subreddits, but can be used at other subreddits as well. 
 
-_Usage:_
+*Usage:*
 
-Modify datalist.txt
-Run bot.py
+Modify _datalist.txt_
+Run _bot.py_
