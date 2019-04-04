@@ -267,7 +267,7 @@ def main():
 		except requests.ConnectionError:
 			logging.error("No connection. Trying again in {} minutes.".format(update_time))
 
-		logging.debug("{}\t{}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))
+		logging.error("Updated at: {}{}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))
 		logging.debug("Sleeping...")
 		time.sleep(60 * update_time)
 		logging.debug("Finished sleeping: \n")
