@@ -258,6 +258,7 @@ def main():
 	while True:
 		os.system('clear')
 		update_time = 30
+		print("Doing a new update.")
 		try:
 			container.read_data_list()
 			container.read_marketcap_list()
@@ -266,7 +267,7 @@ def main():
 			#container.test_print_all()
 		except requests.ConnectionError:
 			logging.error("No connection. Trying again in {} minutes.".format(update_time))
-
+		print("Updated at: {}{}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))	
 		logging.error("Updated at: {}{}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))
 		logging.debug("Sleeping...")
 		time.sleep(60 * update_time)
