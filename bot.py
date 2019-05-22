@@ -65,7 +65,7 @@ class Currency:
 					self._usd_value[splitlist[0]] = splitlist[2].replace('\n', '')
 
 		else:
-			logging.debug(f"No marketcap data for {self._desc_name} - data: {self._coin_short}")
+			logging.debug("No marketcap data for {} - data: {}".format(self._desc_name, self._coin_short))
 
 	def get_coin_short(self):
 		if self._coin_short != 'None':
@@ -98,7 +98,7 @@ class Currency:
 	def update_subreddit(self):
 		folder = 'subred_data/'
 		if self._subreddit == None or self._subreddit == "None":
-			logging.debug(f"Could not update subreddit for {self._desc_name}, subreddit information missing.")
+			logging.debug("Could not update subreddit for {}, subreddit information missing.".format(self._desc_name))
 			return
 
 		if not isfile(folder+self._subreddit):
