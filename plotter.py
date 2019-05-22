@@ -1,6 +1,7 @@
 import bot
 import matplotlib.pyplot as plt
-
+import datetime
+import numpy as np
 def two_scales(ax1, time, data1, data2, c1, c2):
     """
 
@@ -52,15 +53,17 @@ def test():
 	list1 = [100, 200, 300, 400]
 	list2 = [120, 140, 130, 150]
 
-	cointainer = bot_2.Currency_cointainer()
+	cointainer = bot.Currency_cointainer()
 	cointainer.read_data_list()
 	coin = cointainer.get_coin_by_ticker("NEO")
 
 
 	sr = coin.get_subreddit_list()
-	lists = sorted(sr.items())
-	x,y = zip(*lists)
+	lists = sr.items()
 
+	x,y = zip(*lists)
+	x = [datetime.datetime.strptime(i, '%m/%d/%y') for i in x]
+	#print(x)
 	mc_list = coin.get_marketcap_list()
 	mc_lists = mc_list.items()
 	x2, y2 = zip(*mc_lists)
@@ -71,16 +74,18 @@ def test():
 	#print(y2)
 	for item in y2:
 		splitted = item.split(' , ')
-		btc_p.append(splitted[0])
-		usd_p.append(splitted[1])
+		btc_p.append(float(splitted[0]))
+		usd_p.append(float(splitted[1]))
 
-		print(splitted)
-	#x,y = zip(*sorted(coin.get_marketcap_list().items()))
-
-	fig, ax = plt.subplots()
+	#x,y = zip(*sorted(coin.get_marketcap_list().items())) 
+	#print(y2)
 	#fig, ax = plt.subplots()
-	ax1, ax2 = two_scales(ax, list1, list1, list2, 'r', 'b')
-	plt.ylabel("testing")
+	
+	plt.plot(np.array(x), np.array(y))
+
+	#fig, ax = plt.subplots()
+	#ax1, ax2 = two_scales(ax, list1, list1, list2, 'r', 'b')
+	#plt.ylabel("testing")
 	plt.show()
 
 

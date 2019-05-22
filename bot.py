@@ -1,6 +1,6 @@
 from os.path import isfile
 from datetime import datetime, timedelta
-import requests, time, os, calendar
+import requests, time, os, calendar, sys
 import logging
 
 logging.basicConfig(filename="logging.log", level=logging.ERROR)
@@ -255,6 +255,15 @@ def main():
 	logging.debug("\n\n")
 	container = Currency_cointainer()
 	
+
+	if len(sys.argv) > 1:
+		container.read_data_list()
+		container.read_marketcap_list()
+		container.update_subreddit_data()
+		container.update_coin_marketcap()
+		container.test_print_all()
+		exit()
+	
 	while True:
 		os.system('clear')
 		update_time = 30
@@ -268,7 +277,7 @@ def main():
 		except requests.ConnectionError:
 			logging.error("No connection. Trying again in {} minutes.".format(update_time))
 		print("Updated at: {}{}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))	
-		logging.error("Updated at: {}{}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))
+		logging.error("Updated at: {} - {}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))
 		logging.debug("Sleeping...")
 		time.sleep(60 * update_time)
 		logging.debug("Finished sleeping: \n")

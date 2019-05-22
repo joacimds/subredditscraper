@@ -15,3 +15,4 @@ Binance , Binance Coin , BNB , binance , None
 AdEx , Adex , ADX , adex , None
 Nexus , Nexus , NXS , nexusearth , None
 Monetha , Monetha , MTH , monetha , None
+VeriBlock , Veriblock , VBK , veriblock , veriblock
