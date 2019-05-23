@@ -3,12 +3,11 @@ from datetime import datetime, timedelta
 import requests, time, os, calendar, sys
 import logging
 
-logging.basicConfig(filename="logging.log", level=logging.ERROR)
 
+dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
+logging.basicConfig(filename="{}/logging.log".format(dirname), level=logging.ERROR)
 
 debug = 1
-
-
 
 class Currency:
 
@@ -40,8 +39,8 @@ class Currency:
 	def read_subreddit_list(self):
 
 		self._subreddit_list = {}
-		if isfile('subred_data/'+self._subreddit):
-			with open('subred_data/'+self._subreddit, 'r') as file:
+		if isfile(dirname + '/subred_data/' + self._subreddit):
+			with open(dirname + '/subred_data/' + self._subreddit, 'r') as file:
 				for date_line in file:
 						if date_line == '\n':
 							continue
@@ -53,8 +52,8 @@ class Currency:
 
 	def read_marketcap_list(self):
 		self._marketcap_list = {}
-		if isfile('marketcap_data/'+self._coin_short):
-			with open('marketcap_data/'+self._coin_short) as file:
+		if isfile(dirname + '/marketcap_data/'+self._coin_short):
+			with open(dirname + '/marketcap_data/'+self._coin_short) as file:
 				for date_line in file:
 					if date_line == '\n':
 						continue
@@ -96,7 +95,7 @@ class Currency:
 			print("Increase this month:\t\t {:.3f}%".format(self.get_subr_increase_since(-30)))
 
 	def update_subreddit(self):
-		folder = 'subred_data/'
+		folder = dirname + '/subred_data/'
 		if self._subreddit == None or self._subreddit == "None":
 			logging.debug("Could not update subreddit for {}, subreddit information missing.".format(self._desc_name))
 			return
@@ -122,7 +121,7 @@ class Currency:
 			self._btc_value[str(self.get_date(0))] = str(data['BTC'])
 			self._usd_value[str(self.get_date(0))] = str(data['USD'])
 
-		folder = 'marketcap_data/'
+		folder = dirname + '/marketcap_data/'
 		if not isfile(folder + self._coin_short):
 			open(folder+self._coin_short, 'w').close()
 
@@ -146,7 +145,7 @@ class Currency_cointainer:
 
 	def read_data_list(self):
 		logging.debug("Enter: funct read_data_list") 
-		with open("datalist.txt", 'r') as file:
+		with open(dirname + "/datalist.txt", 'r') as file:
 			for line in file:
 				line = line.replace("\n", "")
 				if line == "" or line[0] == "#":
