@@ -275,7 +275,7 @@ def main():
 			#container.test_print_all()
 		except requests.ConnectionError:
 			logging.error("No connection. Trying again in {} minutes.".format(update_time))
-		print("Updated at: {}{}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))	
+		print("Updated at: {} - {}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))	
 		logging.error("Updated at: {} - {}".format(datetime.strftime(datetime.now(), '%x'), time.strftime("%H:%M:%S")))
 		logging.debug("Sleeping...")
 		time.sleep(60 * update_time)
