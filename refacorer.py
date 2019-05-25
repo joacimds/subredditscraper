@@ -87,9 +87,9 @@ def fix_double_commas():
 
 
 def main():
-	#refactor_commas()
-	#refactor_dates()
-	fix_double_commas()
+	refactor_commas()
+	refactor_dates()
+	#fix_double_commas()
 
 if __name__ == '__main__':
 	main()
