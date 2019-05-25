@@ -12,6 +12,8 @@ def refactor_commas():
 		s = ""
 		with open(filepath) as file:
 			for line in file:
+				if line.strip() == "":
+					continue
 				date, btc_value, usd_value = line.strip().split(" , ")
 				s += "{},{},{},{}\n".format(date, time.strftime("%H:%M:%S"), btc_value, usd_value)
 		
@@ -24,6 +26,8 @@ def refactor_commas():
 		s = ""
 		with open(filepath, encoding="utf8", errors='ignore') as file:
 			for line in file:
+				if line.strip() == "":
+					continue
 				try:
 					print(line)
 					date, t1, t2, followers = line.strip().split(",")
@@ -40,6 +44,8 @@ def refactor_dates():
 		s = ""
 		with open(filepath) as file:
 			for line in file:
+				if line.strip() == "":
+					continue
 				info = line.strip().split(",")
 				month, day, year = info[0].split("/")
 				rest = ""
@@ -55,6 +61,8 @@ def refactor_dates():
 		s = ""
 		with open(filepath) as file:
 			for line in file:
+				if line.strip() == "":
+					continue
 				info = line.strip().split(",")
 				month, day, year = info[0].split("/")
 				rest = ""
