@@ -1,4 +1,4 @@
-# [description name], [coin name], [coin code], [subreddit], [twitter] (Any can be None except description name)
+# [description name], [coin name], [marketcap id], [subreddit], [twitter] (Any can be None except description name)
 Bitcoin , bitcoin , BTC , bitcoin , None
 Neo , Neo , NEO , NEO , neo , None
 Ethereum , Ether , ETH , ethereum , None

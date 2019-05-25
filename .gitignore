@@ -1,2 +1,5 @@
 __pycache__/
 deprecated/
+marketcap_data/
+subred_data/
+logging.log
