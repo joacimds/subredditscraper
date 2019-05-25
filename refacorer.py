@@ -15,7 +15,10 @@ def refactor_commas():
 				if line.strip() == "":
 					continue
 				print("LINE: {}".format(line))
-				date, btc_value, usd_value = line.strip().split(" , ")
+				try:
+					date, btc_value, usd_value = line.strip().split(" , ")
+				except:
+					continue
 				s += "{},{},{},{}\n".format(date, time.strftime("%H:%M:%S"), btc_value, usd_value)
 		
 		open(filepath, 'w').write(s)
