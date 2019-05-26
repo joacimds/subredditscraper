@@ -1,6 +1,6 @@
 import os, sys, requests
 from datetime import datetime, timedelta
-from infocontainers import SubredditContainer, MarketcapContainer
+from infocontainers import SubredditContainer, MarketcapContainer, SubredditSentimentAverageContainer
 
 class SystemManager:
 	
@@ -14,6 +14,8 @@ class SystemManager:
 		return os.path.dirname(os.path.abspath(sys.argv[0]))
 
 	def __init__(self, init_file=None):
+		self._supported_types = {"Subreddit" : SubredditContainer, "Marketcap" : MarketcapContainer, "SubredditSentimentAverage" : SubredditSentimentAverageContainer}
+		
 		self._info_containers = {}
 		self._marketcap_data = None
 		if init_file:
@@ -38,9 +40,11 @@ class SystemManager:
 				
 				if subreddit != "None":
 					self.new("Subreddit", subreddit)
-				
+					self.new("SubredditSentimentAverage", subreddit)
+
 				if coin_code != "None":
 					self.new("Marketcap", coin_code)
+
 
 				if twitter != "None":
 					pass
@@ -71,15 +75,14 @@ class SystemManager:
 	Creates a new container_type 
 	'''
 	def new(self, container_type, name):
-		supported_types = {"Subreddit" : SubredditContainer, "Marketcap" : MarketcapContainer}
 		
 		key = self._create_key(container_type, name)
 		if key in self._info_containers:
 			return self._info_containers[key]
 		
-		elif container_type in supported_types:
+		elif container_type in self._supported_types:
 
-			new_container = supported_types[container_type](self, name)
+			new_container = self._supported_types[container_type](self, name)
 			self._info_containers[key] = new_container
 			return new_container
 

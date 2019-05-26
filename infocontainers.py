@@ -306,8 +306,3 @@ class SubredditSentimentAverageContainer(InfoContainer):
 	def folder_path(self):
 		return os.path.join(self.directory_location(), self.folder_location())
 
-
-cont = SubredditSentimentAverageContainer(None, 'bitcoin')
-cont.update()
-cont.prettyprint()
-cont.write_to_file()
