@@ -243,12 +243,9 @@ class SubredditSentimentAverageContainer(InfoContainer):
 			url = "https://www.reddit.com" + post['data']['permalink'] + ".json"
 
 			url_response = requests.get(url, headers = {'User-agent': 'floffbot'})
-			#print(url)
-			#print(url_response)
 			url_data = url_response.json()
 			average_comment_score = None
 			for url_comment in url_data[1]['data']['children']:
-				print(url_comment)
 				try:
 					comment = url_comment['data']['body']
 					comment_score = self._sentiment_analyzer_scores(comment)
