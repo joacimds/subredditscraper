@@ -1,5 +1,7 @@
 import os, sys, requests
 from datetime import datetime, timedelta
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+	
 
 class InfoContainer:
 
@@ -192,3 +194,115 @@ class MarketcapContainer(InfoContainer):
 
 	def folder_path(self):
 		return os.path.join(self.directory_location(), self.folder_location())
+
+class SubredditSentimentAverageContainer(InfoContainer):
+	def __init__(self, parent_container, name):
+		self._title_sentiment = []
+		self._text_sentiment = []
+		self._comment_sentiment = []
+		self._limit = 50 # 25 / 50 / 75 / 100
+
+		super().__init__("SubredditSentimentAverage", parent_container, name)
+
+		self._data_lists["title_sentiment"] = self._title_sentiment
+		self._data_lists["text_sentiment"] = self._text_sentiment
+		self._data_lists["comment_sentiment"] = self._comment_sentiment
+		self._analyser = SentimentIntensityAnalyzer()	
+
+	def _sentiment_analyzer_scores(self, sentence):
+		score = self._analyser.polarity_scores(sentence)
+		return score
+	
+	def _average_scores(self, score1, score2):
+		if not score1 or not score2:
+			return score2
+
+		score_fin = {}
+		score_fin['neg'] = (score1['neg'] + score2['neg']) / 2
+		score_fin['neu'] = (score1['neu'] + score2['neu']) / 2
+		score_fin['pos'] = (score1['pos'] + score2['pos']) / 2
+		score_fin['compound'] = (score1['compound'] + score2['compound']) / 2
+		return score_fin
+
+	def _score_to_list(self, score):
+		if not score:
+			return [0,0,0,0]
+
+		return [score['neg'], score['neu'], score['pos'], score['compound']]
+
+	def _get_update_data(self, date):
+		request_string = 'https://www.reddit.com/r/{}/new/.json?limit=50'.format(self._ticker_id)
+		response = requests.get(request_string, headers = {'User-agent': 'floffbot'})
+		data = response.json()
+		average_selftext = None
+		average_title = None
+		average_comment = None
+		for post in data['data']['children']:
+			selftext = post['data']['selftext']
+			title = post['data']['title']
+			url = "https://www.reddit.com" + post['data']['permalink'] + ".json"
+
+			url_response = requests.get(url, headers = {'User-agent': 'floffbot'})
+			#print(url)
+			#print(url_response)
+			url_data = url_response.json()
+			average_comment_score = None
+			for url_comment in url_data[1]['data']['children']:
+				print(url_comment)
+				try:
+					comment = url_comment['data']['body']
+					comment_score = self._sentiment_analyzer_scores(comment)
+				
+					average_comment_score = self._average_scores(average_comment_score, comment_score)
+				except:
+					continue
+
+			selftext_score = self._sentiment_analyzer_scores(selftext)
+			title_score = self._sentiment_analyzer_scores(title)
+
+			average_selftext = self._average_scores(average_selftext, selftext_score)
+			average_title = self._average_scores(average_title, title_score)
+			average_comment = self._average_scores(average_comment, average_comment_score)
+			
+			#print("Average comment score: {}".format(average_comment))
+			#print("Average title score: {}".format(average_title))
+			#print("Average selftext score: {}".format(average_selftext))
+
+		return self._score_to_list(average_title) + self._score_to_list(average_selftext) + self._score_to_list(average_comment)
+
+	def _add_data_to_lists(self, i, date, data):
+		
+		title = (date,{'neg':data[i+1], 'neu':data[i+2], 'pos': data[i+3], 'compound': data[i+4]})
+		selftext = (date,{'neg':data[i+5], 'neu':data[i+6], 'pos': data[i+7], 'compound': data[i+8]})
+		comment = (date,{'neg':data[i+9], 'neu':data[i+10], 'pos': data[i+11], 'compound': data[i+12]})
+		
+		self._title_sentiment.append(title)
+		self._text_sentiment.append(selftext)
+		self._comment_sentiment.append(comment)
+
+	def _lines_per_update(self):
+		return 13
+
+	def _score_to_csv(self, score):
+		return "{},{},{},{}".format(score['neg'], score['neu'], score['pos'], score['compound'])
+
+	def _get_write_info(self, i):
+		title_info = self._title_sentiment[i]
+		text_info = self._text_sentiment[i]
+		comment_info = self._comment_sentiment[i]
+
+		date = title_info[0]
+		title_csv = self._score_to_csv(title_info[1])
+		text_csv = self._score_to_csv(text_info[1])
+		comment_csv = self._score_to_csv(comment_info[1])
+
+		return "{}:{}:{},{},{},{}".format(date.hour, date.minute, date.second, title_csv, text_csv, comment_csv)
+
+
+
+	def folder_location(self):
+		return "subreddit_sentiment_average"
+
+	def folder_path(self):
+		return os.path.join(self.directory_location(), self.folder_location())
+
