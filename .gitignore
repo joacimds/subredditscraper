@@ -2,4 +2,6 @@ __pycache__/
 deprecated/
 marketcap_data/
 subred_data/
+subreddit_sentiment_average/
+sentimentanalyzer.py
 logging.log
