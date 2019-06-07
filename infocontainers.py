@@ -13,6 +13,7 @@ class InfoContainer:
 		self._elements = 0
 		self._file_init()
 		self._errors = False
+
 		for value in self._data_lists.values():
 			value.sort()
 
@@ -43,6 +44,7 @@ class InfoContainer:
 						self._add_data_to_lists(i, date, data)					
 					except Exception as e:
 						print("Error in {}:{}._add_data_to_lists: {}".format(self._container_type, self._ticker_id, e))
+						self._errors = True
 						return
 					i += self._lines_per_update()
 					self._elements += 1
@@ -73,7 +75,7 @@ class InfoContainer:
 	def write_to_file(self):
 		if self._errors:
 			print("Previosly encountered error. Returning.")
-			
+
 		try:		
 			s = ""
 			year = -1
@@ -117,14 +119,18 @@ class InfoContainer:
 
 
 	def update(self):
-		date = datetime.now()
-		data = self._get_update_data(date)
-		if data == None:
-			return
-		assert self._lines_per_update() - 1 == len(data), "{} update expected {} data elements, but got {}.".format(self._ticker_id, self._lines_per_update() - 1, len(data))
-		data = ["",""] + data
-		self._add_data_to_lists(1, date, data)
-		self._elements += 1
+		try:
+			date = datetime.now()
+			data = self._get_update_data(date)
+			if data == None:
+				return
+			assert self._lines_per_update() - 1 == len(data), "{} update expected {} data elements, but got {}.".format(self._ticker_id, self._lines_per_update() - 1, len(data))
+			data = ["",""] + data
+			self._add_data_to_lists(1, date, data)
+			self._elements += 1
+		except Exception as e:
+			print("Error in {}:{}.update: {}".format(self._container_type, self._ticker_id, e))
+			self._errors = True
 	'''
 		returns: a list of information which is passed to _add_data_to_lists
 	'''
