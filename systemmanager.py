@@ -25,7 +25,7 @@ class SystemManager:
 		with open(os.path.join(self.directory_location(), init_file), 'r') as file:
 			for line in file:
 				data = line.split(",")
-		
+				
 				if line.strip()[0] == '#':
 					continue
 		
@@ -38,15 +38,15 @@ class SystemManager:
 				subreddit = data[3].strip()			# Its subreddit
 				twitter = data[4].strip()			# Twitter account
 				
-				if subreddit != "None":
+				if subreddit != "None" and subreddit != "":
 					self.new("Subreddit", subreddit)
 					self.new("SubredditSentimentAverage", subreddit)
 
-				if coin_code != "None":
+				if coin_code != "None" and coin_code != "":
 					self.new("Marketcap", coin_code)
 
 
-				if twitter != "None":
+				if twitter != "None" and twitter != "":
 					pass
 				
 				#print("{} - {} - {} - {} - {}".format(description_name, coin_name, coin_code, subreddit, twitter))

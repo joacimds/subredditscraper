@@ -1,7 +1,7 @@
 from systemmanager import SystemManager
 
 def main():
-	datalist = "datalist.txt"
+	datalist = "datalist_updated.csv"
 	manager = SystemManager(datalist)
 	#manager.prettyprint()
 	manager.update()

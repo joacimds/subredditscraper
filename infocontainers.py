@@ -12,6 +12,7 @@ class InfoContainer:
 		self._data_lists = {}
 		self._elements = 0
 		self._file_init()
+		self._errors = False
 		for value in self._data_lists.values():
 			value.sort()
 
@@ -37,7 +38,12 @@ class InfoContainer:
 						date = datetime.strptime("{} {}".format(data[0], data[i]), "%y/%m/%d %H:%M:%S")
 					except ValueError as ve:
 						date = datetime.strptime("{} {}".format(data[0], data[i]), "%Y/%m/%d %H:%M:%S")
-					self._add_data_to_lists(i, date, data)					
+					
+					try:
+						self._add_data_to_lists(i, date, data)					
+					except Exception as e:
+						print("Error in {}:{}._add_data_to_lists: {}".format(self._container_type, self._ticker_id, e))
+						return
 					i += self._lines_per_update()
 					self._elements += 1
 
@@ -65,26 +71,31 @@ class InfoContainer:
 				print("\t\t   {}:{}:{} - {}".format(date.hour, date.minute, date.second, item[1]))
 			
 	def write_to_file(self):
-		s = ""
-		year = -1
-		month = -1
-		day = -1
-		dates = next(iter(self._data_lists.values()))
-		for i in range(0, self._elements):
-			date = dates[i][0]
-			if date.year != year or date.month != month or date.day != day:
-				if year != -1:
-					s += "\n"
-				year = date.year
-				month = date.month
-				day = date.day
-				s+= "{}/{}/{}".format(year, month, day)
+		if self._errors:
+			print("Previosly encountered error. Returning.")
 			
-			info = self._get_write_info(i)
-			s += "," + info
-			#print(info)
-		open(self.file_path(), 'w').write(s)
-
+		try:		
+			s = ""
+			year = -1
+			month = -1
+			day = -1
+			dates = next(iter(self._data_lists.values()))
+			for i in range(0, self._elements):
+				date = dates[i][0]
+				if date.year != year or date.month != month or date.day != day:
+					if year != -1:
+						s += "\n"
+					year = date.year
+					month = date.month
+					day = date.day
+					s+= "{}/{}/{}".format(year, month, day)
+				
+				info = self._get_write_info(i)
+				s += "," + info
+				#print(info)
+			open(self.file_path(), 'w').write(s)
+		except Exception as e:
+			print("Error in {}:{}.write_to_file: {}".format(self._container_type, self._ticker_id, e))
 	# General method for plotting simple containers. 
 	# Must be overridden for most containers to work.
 	def plot(self, savefile=None):
