@@ -1,7 +1,7 @@
 import os, sys, requests
 from datetime import datetime, timedelta
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-	
+import matplotlib.pyplot as plt	
 
 class InfoContainer:
 
@@ -12,6 +12,8 @@ class InfoContainer:
 		self._data_lists = {}
 		self._elements = 0
 		self._file_init()
+		self._errors = False
+
 		for value in self._data_lists.values():
 			value.sort()
 
@@ -37,7 +39,13 @@ class InfoContainer:
 						date = datetime.strptime("{} {}".format(data[0], data[i]), "%y/%m/%d %H:%M:%S")
 					except ValueError as ve:
 						date = datetime.strptime("{} {}".format(data[0], data[i]), "%Y/%m/%d %H:%M:%S")
-					self._add_data_to_lists(i, date, data)					
+					
+					try:
+						self._add_data_to_lists(i, date, data)					
+					except Exception as e:
+						print("Error in {}:{}._add_data_to_lists: {}".format(self._container_type, self._ticker_id, e))
+						self._errors = True
+						return
 					i += self._lines_per_update()
 					self._elements += 1
 
@@ -65,35 +73,64 @@ class InfoContainer:
 				print("\t\t   {}:{}:{} - {}".format(date.hour, date.minute, date.second, item[1]))
 			
 	def write_to_file(self):
-		s = ""
-		year = -1
-		month = -1
-		day = -1
-		dates = next(iter(self._data_lists.values()))
-		for i in range(0, self._elements):
-			date = dates[i][0]
-			if date.year != year or date.month != month or date.day != day:
-				if year != -1:
-					s += "\n"
-				year = date.year
-				month = date.month
-				day = date.day
-				s+= "{}/{}/{}".format(year, month, day)
-			
-			info = self._get_write_info(i)
-			s += "," + info
-			#print(info)
-		open(self.file_path(), 'w').write(s)
+		if self._errors:
+			print("Previosly encountered error. Returning.")
+
+		try:		
+			s = ""
+			year = -1
+			month = -1
+			day = -1
+			dates = next(iter(self._data_lists.values()))
+			for i in range(0, self._elements):
+				date = dates[i][0]
+				if date.year != year or date.month != month or date.day != day:
+					if year != -1:
+						s += "\n"
+					year = date.year
+					month = date.month
+					day = date.day
+					s+= "{}/{}/{}".format(year, month, day)
+				
+				info = self._get_write_info(i)
+				s += "," + info
+				#print(info)
+			open(self.file_path(), 'w').write(s)
+		except Exception as e:
+			print("Error in {}:{}.write_to_file: {}".format(self._container_type, self._ticker_id, e))
+	# General method for plotting simple containers. 
+	# Must be overridden for most containers to work.
+	def plot(self, savefile=None):
+		for key, data_list in self._data_lists.items():
+			plt.title(str(self))
+			plt.ylabel(key)
+			plt.xlabel("date")
+			plt.plot(*zip(*data_list))
+			plt.gcf().autofmt_xdate()
+		
+		self.save_plot(savefile)
+
+	def save_plot(self, savefile):
+		if savefile:
+			plt.savefig(savefile+'.png')
+			plt.savefig(savefile+'.pdf')
+		else:
+			plt.show()
+
 
 	def update(self):
-		date = datetime.now()
-		data = self._get_update_data(date)
-		if data == None:
-			return
-		assert self._lines_per_update() - 1 == len(data), "{} update expected {} data elements, but got {}.".format(self._ticker_id, self._lines_per_update() - 1, len(data))
-		data = ["",""] + data
-		self._add_data_to_lists(1, date, data)
-		self._elements += 1
+		try:
+			date = datetime.now()
+			data = self._get_update_data(date)
+			if data == None:
+				return
+			assert self._lines_per_update() - 1 == len(data), "{} update expected {} data elements, but got {}.".format(self._ticker_id, self._lines_per_update() - 1, len(data))
+			data = ["",""] + data
+			self._add_data_to_lists(1, date, data)
+			self._elements += 1
+		except Exception as e:
+			print("Error in {}:{}.update: {}".format(self._container_type, self._ticker_id, e))
+			self._errors = True
 	'''
 		returns: a list of information which is passed to _add_data_to_lists
 	'''
@@ -195,6 +232,26 @@ class MarketcapContainer(InfoContainer):
 	def folder_path(self):
 		return os.path.join(self.directory_location(), self.folder_location())
 
+	def plot(self, savefile=None):
+		fig = plt.figure()
+
+		host = fig.add_subplot(111)
+
+		par1 = host.twinx()
+		host.set_title(str(self))
+		host.set_xlabel("date")
+		host.set_ylabel("Bitcoin value")
+		par1.set_ylabel("Dollar value")
+
+		p1, = host.plot(*zip(*self._data_lists["btc_value"]), color='orange', label="{}/BTC".format(self._ticker_id))
+		p2, = par1.plot(*zip(*self._data_lists["usd_value"]), color='blue', label="{}/USD".format(self._ticker_id))
+		plt.gcf().autofmt_xdate()
+		lns = [p1, p2]
+		host.legend(handles=lns, loc='best')
+		host.yaxis.label.set_color(p1.get_color())
+		par1.yaxis.label.set_color(p2.get_color())
+		self.save_plot(savefile)
+
 class SubredditSentimentAverageContainer(InfoContainer):
 	def __init__(self, parent_container, name):
 		self._title_sentiment = []
@@ -213,6 +270,43 @@ class SubredditSentimentAverageContainer(InfoContainer):
 		score = self._analyser.polarity_scores(sentence)
 		return score
 	
+	def plot(self, savefile=None):
+		
+		
+		for key in ["title_sentiment", "text_sentiment", "comment_sentiment"]:
+			tit_neg = []
+			tit_neu = []
+			tit_pos = []
+			tit_compound = []
+			for data in self._data_lists[key]:
+				tit_neg.append((data[0], float(data[1]["neg"])))
+				tit_neu.append((data[0], float(data[1]["neu"])))
+				tit_pos.append((data[0], float(data[1]["pos"])))
+				tit_compound.append((data[0], float(data[1]["compound"])))
+				
+				
+			fig = plt.figure()
+
+			host = fig.add_subplot(111)
+			host.set_ylim(0,1)
+			#print(tit_pos)
+			par1 = host.twinx()
+			host.set_title(str(self) + " " + key)
+			host.set_xlabel("date")
+			host.set_ylabel("Pos/Neg trend")
+			#par1.set_ylabel("neu")
+
+			p1, = host.plot(*zip(*tit_neg), color='red', label="Negative")
+			p2, = host.plot(*zip(*tit_pos), color='green', label="Positive")
+			#p3, = par1.plot(*zip(*tit_compound), color='gray', label="Compound title")
+			plt.gcf().autofmt_xdate()
+			lns = [p1, p2]
+			host.legend(handles=lns, loc='best')
+			host.yaxis.label.set_color(p1.get_color())
+			#par1.yaxis.label.set_color(p3.get_color())
+			self.save_plot(savefile + "_" + key)
+
+
 	def _average_scores(self, score1, score2):
 		if not score1 or not score2:
 			return score2

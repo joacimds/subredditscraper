@@ -5,3 +5,6 @@ subred_data/
 subreddit_sentiment_average/
 sentimentanalyzer.py
 logging.log
+*.png
+*.pdf
+*.csv
