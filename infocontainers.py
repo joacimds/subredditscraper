@@ -1,7 +1,7 @@
 import os, sys, requests
 from datetime import datetime, timedelta
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-	
+import matplotlib.pyplot as plt	
 
 class InfoContainer:
 
@@ -84,6 +84,26 @@ class InfoContainer:
 			s += "," + info
 			#print(info)
 		open(self.file_path(), 'w').write(s)
+
+	# General method for plotting simple containers. 
+	# Must be overridden for most containers to work.
+	def plot(self, savefile=None):
+		for key, data_list in self._data_lists.items():
+			plt.title(str(self))
+			plt.ylabel(key)
+			plt.xlabel("date")
+			plt.plot(*zip(*data_list))
+			plt.gcf().autofmt_xdate()
+		
+		self.save_plot(savefile)
+
+	def save_plot(self, savefile):
+		if savefile:
+			plt.savefig(savefile+'.png')
+			plt.savefig(savefile+'.pdf')
+		else:
+			plt.show()
+
 
 	def update(self):
 		date = datetime.now()
@@ -195,6 +215,26 @@ class MarketcapContainer(InfoContainer):
 	def folder_path(self):
 		return os.path.join(self.directory_location(), self.folder_location())
 
+	def plot(self, savefile=None):
+		fig = plt.figure()
+
+		host = fig.add_subplot(111)
+
+		par1 = host.twinx()
+		host.set_title(str(self))
+		host.set_xlabel("date")
+		host.set_ylabel("Bitcoin value")
+		par1.set_ylabel("Dollar value")
+
+		p1, = host.plot(*zip(*self._data_lists["btc_value"]), color='orange', label="{}/BTC".format(self._ticker_id))
+		p2, = par1.plot(*zip(*self._data_lists["usd_value"]), color='blue', label="{}/USD".format(self._ticker_id))
+		plt.gcf().autofmt_xdate()
+		lns = [p1, p2]
+		host.legend(handles=lns, loc='best')
+		host.yaxis.label.set_color(p1.get_color())
+		par1.yaxis.label.set_color(p2.get_color())
+		self.save_plot(savefile)
+
 class SubredditSentimentAverageContainer(InfoContainer):
 	def __init__(self, parent_container, name):
 		self._title_sentiment = []
@@ -213,6 +253,43 @@ class SubredditSentimentAverageContainer(InfoContainer):
 		score = self._analyser.polarity_scores(sentence)
 		return score
 	
+	def plot(self, savefile=None):
+		
+		
+		for key in ["title_sentiment", "text_sentiment", "comment_sentiment"]:
+			tit_neg = []
+			tit_neu = []
+			tit_pos = []
+			tit_compound = []
+			for data in self._data_lists[key]:
+				tit_neg.append((data[0], float(data[1]["neg"])))
+				tit_neu.append((data[0], float(data[1]["neu"])))
+				tit_pos.append((data[0], float(data[1]["pos"])))
+				tit_compound.append((data[0], float(data[1]["compound"])))
+				
+				
+			fig = plt.figure()
+
+			host = fig.add_subplot(111)
+			host.set_ylim(0,1)
+			#print(tit_pos)
+			par1 = host.twinx()
+			host.set_title(str(self) + " " + key)
+			host.set_xlabel("date")
+			host.set_ylabel("Pos/Neg trend")
+			#par1.set_ylabel("neu")
+
+			p1, = host.plot(*zip(*tit_neg), color='red', label="Negative")
+			p2, = host.plot(*zip(*tit_pos), color='green', label="Positive")
+			#p3, = par1.plot(*zip(*tit_compound), color='gray', label="Compound title")
+			plt.gcf().autofmt_xdate()
+			lns = [p1, p2]
+			host.legend(handles=lns, loc='best')
+			host.yaxis.label.set_color(p1.get_color())
+			#par1.yaxis.label.set_color(p3.get_color())
+			self.save_plot(savefile + "_" + key)
+
+
 	def _average_scores(self, score1, score2):
 		if not score1 or not score2:
 			return score2

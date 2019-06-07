@@ -62,6 +62,12 @@ class SystemManager:
 	def _create_key(self, container_type, name):
 		return "{}-{}".format(container_type, name)
 
+	def supported_types(self):
+		return list(self._supported_types.keys())
+
+	def container_keys(self):
+		return list(self._info_containers.keys())
+
 	def add(self, container):
 		raise AttributeError("Add operation in SystemManager is not supported - use new")
 
