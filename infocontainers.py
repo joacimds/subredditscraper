@@ -75,7 +75,7 @@ class InfoContainer:
 	def write_to_file(self):
 		if self._errors:
 			print("Previosly encountered error. Returning.")
-
+			return
 		try:		
 			s = ""
 			year = -1
@@ -110,10 +110,15 @@ class InfoContainer:
 		
 		self.save_plot(savefile)
 
+
 	def save_plot(self, savefile):
 		if savefile:
-			plt.savefig(savefile+'.png')
-			plt.savefig(savefile+'.pdf')
+			path = os.path.join(self.directory_location(), 'plots')
+			if not os.path.exists(path):
+				os.makedirs(path)
+			plt.savefig(os.path.join(path, savefile+'.png'))
+			plt.savefig(os.path.join(path, savefile+'.pdf'))
+			plt.close("all")
 		else:
 			plt.show()
 
