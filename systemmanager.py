@@ -41,6 +41,7 @@ class SystemManager:
 				if subreddit != "None" and subreddit != "":
 					self.new("Subreddit", subreddit)
 					self.new("SubredditSentimentAverage", subreddit)
+					
 
 				if coin_code != "None" and coin_code != "":
 					self.new("Marketcap", coin_code)
@@ -121,17 +122,30 @@ class SystemManager:
 	# Quickfix to lessen the cryptocompare API calls
 	def _fetch_marketcap(self):
 		ticker_list = []
+		marketcap_datas = []
 		for container in self._info_containers.values():
 			if container.get_container_type() == "Marketcap":
 				ticker_list.append(container.get_ticker_id())
-		ticker_str = ",".join(ticker_list)
-		string = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms={}&tsyms=BTC,USD'.format(ticker_str)		
-		response = requests.get(string)
-		data = response.json()
-		return data
+		
+		i = 30
+
+		while i < len(ticker_list):
+			ticker_list_2 = ticker_list[i-30:i]
+			ticker_str = ",".join(ticker_list_2)
+			string = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms={}&tsyms=BTC,USD'.format(ticker_str)		
+			response = requests.get(string)
+			data = response.json()
+			marketcap_datas.append(data)
+
+			i += 30
+		
+		return marketcap_datas
 
 	def get_marketcap_data(self, ticker_id):
 		assert self._marketcap_data != None
-		if ticker_id not in self._marketcap_data:
-			return None
-		return self._marketcap_data[ticker_id]
+		for response in self._marketcap_data:
+			if ticker_id in response:
+				return response[ticker_id]
+
+		print("Did not fint {}".format(ticker_id))
+		return None

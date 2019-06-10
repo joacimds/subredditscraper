@@ -1,6 +1,7 @@
 __pycache__/
 deprecated/
 marketcap_data/
+plots/
 subred_data/
 subreddit_sentiment_average/
 sentimentanalyzer.py
@@ -8,3 +9,4 @@ logging.log
 *.png
 *.pdf
 *.csv
+.DS_store
