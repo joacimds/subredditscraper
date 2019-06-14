@@ -4,6 +4,7 @@ marketcap_data/
 plots/
 subred_data/
 subreddit_sentiment_average/
+.ipynb_checkpoints/
 sentimentanalyzer.py
 logging.log
 *.png
