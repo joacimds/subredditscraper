@@ -1,7 +1,8 @@
-import os, sys, requests
+import os, sys, requests, string, json
 from datetime import datetime, timedelta
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import matplotlib.pyplot as plt	
+from collections import Counter
 
 class InfoContainer:
 
@@ -158,7 +159,7 @@ class InfoContainer:
 		raise NotImplementedError
 
 	def folder_path(self):
-		return NotImplementedError
+		return os.path.join(self.directory_location(), self.folder_location())
 
 	def file_path(self):
 		return os.path.join(self.folder_path(), self._ticker_id)
@@ -401,4 +402,121 @@ class SubredditSentimentAverageContainer(InfoContainer):
 
 	def folder_path(self):
 		return os.path.join(self.directory_location(), self.folder_location())
+
+class HypePredictor(InfoContainer):
+
+	def __init__(self, parent_container, name):
+		
+		self._limit = 100
+		self._watchlist_file = "all_cryptos.csv"
+		self._posts = []
+		self._comments = []
+		super().__init__("HypePredictor", parent_container, name)
+		
+		self._data_lists["posts"] = self._posts
+		self._data_lists["comments"] = self._comments
+		# Name : CODE		
+		self._watchlist = {}
+		with open(self._watchlist_file) as file:
+			for line in file:
+				line = line.lower()
+				data = line.strip().split(",")
+				code = data[0]
+				for word in data:
+					self._watchlist[word] = code
+
+
+	def _get_update_data(self, date):
+		request_string = 'https://www.reddit.com/r/{}/new/.json?limit={}'.format(self._ticker_id, self._limit)
+		response = requests.get(request_string, headers = {'User-agent': 'floffbot'})
+		data = response.json()
+		#print(data)
+
+		total = Counter({})
+		total_comments = Counter({})
+		for post in data['data']['children']:
+			selftext = post['data']['selftext']
+			selftext_count = Counter(self.countwords(selftext.lower()))
+			title = post['data']['title']
+			title_count = Counter(self.countwords(title.lower()))
+
+			total += selftext_count + title_count
+			#print(total)
+			url = "https://www.reddit.com" + post['data']['permalink'] + ".json"
+
+			url_response = requests.get(url, headers = {'User-agent': 'floffbot'})
+			url_data = url_response.json()
+			
+			for url_comment in url_data[1]['data']['children']:
+				try:
+					comment = url_comment['data']['body']
+					#comment_score = self._sentiment_analyzer_scores(comment)
+					total_comments += Counter(self.countwords(comment.lower()))
+					#average_comment_score = self._average_scores(average_comment_score, comment_score)
+				except:
+					continue
+
+		out = [str(dict(total)).replace(",","ÅÅ"), str(dict(total_comments)).replace(",","ÅÅ")]
+		return out
+
+	def _add_data_to_lists(self, i, date, data):
+		p1 = data[i+1].replace("ÅÅ",",")
+		json_acceptable_string = p1.replace("'", "\"")
+		d = json.loads(json_acceptable_string)
+
+		posts = (date, d)
+		
+		p2 = data[i+2].replace("ÅÅ",",")
+		json_acceptable_string = p2.replace("'", "\"")
+		d2 = json.loads(json_acceptable_string)
+
+		comments = (date, d2)
+		
+		self._posts.append(posts)
+		self._comments.append(comments)
+
+	def _get_write_info(self, i):
+		posts = self._posts[i]
+		comments = self._comments[i]
+		
+		date = posts[0]
+		posts_txt = str(posts[1]).replace(",","ÅÅ")
+		comment_txt = str(comments[1]).replace(",","ÅÅ")
+
+		return "{}:{}:{},{},{}".format(date.hour, date.minute, date.second, posts_txt, comment_txt)
+
+
+	def _lines_per_update(self):
+		return 3
+
+	def countwords(self, my_string):
+		"""refactor to functions at some point"""
+
+		output = []
+
+		# remove punctuation from string
+		for char in my_string:
+			if char not in string.punctuation:
+				output.append(char)
+
+		# convert string to list
+		output = ("".join(output)).split()
+
+		my_dict = {}
+		# create dictionary from list and put word count as value
+		for word in output:
+			if word in self._watchlist:
+				my_dict.update({word: output.count(word)})
+
+		# Print a formatted table of results
+		#print("\n{:10}{}".format("Word", "Count") + "\n" + "-" * 15)
+
+		#for key, value in my_dict.items():
+		#    print("{:10}{:^5}".format(key, value))
+
+		return my_dict
+
+	def folder_location(self):
+		return "subreddit_hype_predictor"
+
 

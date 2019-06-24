@@ -1,6 +1,6 @@
 import os, sys, requests
 from datetime import datetime, timedelta
-from infocontainers import SubredditContainer, MarketcapContainer, SubredditSentimentAverageContainer
+from infocontainers import SubredditContainer, MarketcapContainer, SubredditSentimentAverageContainer, HypePredictor
 
 class SystemManager:
 	
@@ -14,7 +14,7 @@ class SystemManager:
 		return os.path.dirname(os.path.abspath(sys.argv[0]))
 
 	def __init__(self, init_file=None):
-		self._supported_types = {"Subreddit" : SubredditContainer, "Marketcap" : MarketcapContainer, "SubredditSentimentAverage" : SubredditSentimentAverageContainer}
+		self._supported_types = {"Subreddit" : SubredditContainer, "Marketcap" : MarketcapContainer, "SubredditSentimentAverage" : SubredditSentimentAverageContainer, "HypePredictor" : HypePredictor}
 		
 		self._info_containers = {}
 		self._marketcap_data = None
@@ -22,6 +22,8 @@ class SystemManager:
 			self._init_from_file(init_file)
 
 	def _init_from_file(self, init_file):
+		self.new('HypePredictor', 'CryptoCurrency')
+
 		with open(os.path.join(self.directory_location(), init_file), 'r') as file:
 			for line in file:
 				data = line.split(",")
@@ -39,13 +41,13 @@ class SystemManager:
 				twitter = data[4].strip()			# Twitter account
 				
 				if subreddit != "None" and subreddit != "":
-					self.new("Subreddit", subreddit)
-					self.new("SubredditSentimentAverage", subreddit)
-					
+					#self.new("Subreddit", subreddit)
+					#self.new("SubredditSentimentAverage", subreddit)
+					pass
 
 				if coin_code != "None" and coin_code != "":
-					self.new("Marketcap", coin_code)
-
+					#self.new("Marketcap", coin_code)
+					pass
 
 				if twitter != "None" and twitter != "":
 					pass
