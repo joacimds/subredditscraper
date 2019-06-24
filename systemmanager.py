@@ -23,7 +23,8 @@ class SystemManager:
 
 	def _init_from_file(self, init_file):
 		self.new('HypePredictor', 'CryptoCurrency')
-
+		self.new('HypePredictor', 'CryptoMarkets')
+		
 		with open(os.path.join(self.directory_location(), init_file), 'r') as file:
 			for line in file:
 				data = line.split(",")

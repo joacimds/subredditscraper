@@ -1,8 +1,12 @@
-import os, sys, requests, string, json
+import os, sys, requests, string, json, logging
 from datetime import datetime, timedelta
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import matplotlib.pyplot as plt	
 from collections import Counter
+
+dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
+logging.basicConfig(filename="{}/logging.log".format(dirname), level=logging.ERROR)
+
 
 class InfoContainer:
 
@@ -45,6 +49,7 @@ class InfoContainer:
 						self._add_data_to_lists(i, date, data)					
 					except Exception as e:
 						print("Error in {}:{}._add_data_to_lists: {}".format(self._container_type, self._ticker_id, e))
+						logging.error("Error in {}:{}._add_data_to_lists: {}".format(self._container_type, self._ticker_id, e))
 						self._errors = True
 						return
 					i += self._lines_per_update()
@@ -76,6 +81,7 @@ class InfoContainer:
 	def write_to_file(self):
 		if self._errors:
 			print("Previosly encountered error. Returning.")
+			logging.error("Previosly encountered error. Returning.")
 			return
 		try:		
 			s = ""
@@ -99,6 +105,7 @@ class InfoContainer:
 			open(self.file_path(), 'w').write(s)
 		except Exception as e:
 			print("Error in {}:{}.write_to_file: {}".format(self._container_type, self._ticker_id, e))
+			logging.error("Error in {}:{}.write_to_file: {}".format(self._container_type, self._ticker_id, e))
 	# General method for plotting simple containers. 
 	# Must be overridden for most containers to work.
 	def plot(self, savefile=None):
@@ -136,6 +143,7 @@ class InfoContainer:
 			self._elements += 1
 		except Exception as e:
 			print("Error in {}:{}.update: {}".format(self._container_type, self._ticker_id, e))
+			logging.error("Error in {}:{}.update: {}".format(self._container_type, self._ticker_id, e))
 			self._errors = True
 	'''
 		returns: a list of information which is passed to _add_data_to_lists
@@ -295,7 +303,7 @@ class SubredditSentimentAverageContainer(InfoContainer):
 
 			host = fig.add_subplot(111)
 			host.set_ylim(0,1)
-			#print(tit_pos)
+
 			par1 = host.twinx()
 			host.set_title(str(self) + " " + key)
 			host.set_xlabel("date")
@@ -361,9 +369,6 @@ class SubredditSentimentAverageContainer(InfoContainer):
 			average_title = self._average_scores(average_title, title_score)
 			average_comment = self._average_scores(average_comment, average_comment_score)
 			
-			#print("Average comment score: {}".format(average_comment))
-			#print("Average title score: {}".format(average_title))
-			#print("Average selftext score: {}".format(average_selftext))
 
 		return self._score_to_list(average_title) + self._score_to_list(average_selftext) + self._score_to_list(average_comment)
 
@@ -427,13 +432,15 @@ class HypePredictor(InfoContainer):
 
 
 	def _get_update_data(self, date):
+		total = Counter({})
+		total_comments = Counter({})
+
+
 		request_string = 'https://www.reddit.com/r/{}/new/.json?limit={}'.format(self._ticker_id, self._limit)
 		response = requests.get(request_string, headers = {'User-agent': 'floffbot'})
 		data = response.json()
-		#print(data)
 
-		total = Counter({})
-		total_comments = Counter({})
+		
 		for post in data['data']['children']:
 			selftext = post['data']['selftext']
 			selftext_count = Counter(self.countwords(selftext.lower()))
@@ -441,7 +448,32 @@ class HypePredictor(InfoContainer):
 			title_count = Counter(self.countwords(title.lower()))
 
 			total += selftext_count + title_count
-			#print(total)
+			url = "https://www.reddit.com" + post['data']['permalink'] + ".json"
+
+			url_response = requests.get(url, headers = {'User-agent': 'floffbot'})
+			url_data = url_response.json()
+			
+			for url_comment in url_data[1]['data']['children']:
+				try:
+					comment = url_comment['data']['body']
+					#comment_score = self._sentiment_analyzer_scores(comment)
+					total_comments += Counter(self.countwords(comment.lower()))
+					#average_comment_score = self._average_scores(average_comment_score, comment_score)
+				except:
+					continue
+		
+		request_string = 'https://www.reddit.com/r/{}/top/.json?limit={}'.format(self._ticker_id, self._limit)
+		response = requests.get(request_string, headers = {'User-agent': 'floffbot'})
+		data = response.json()
+
+		
+		for post in data['data']['children']:
+			selftext = post['data']['selftext']
+			selftext_count = Counter(self.countwords(selftext.lower()))
+			title = post['data']['title']
+			title_count = Counter(self.countwords(title.lower()))
+
+			total += selftext_count + title_count
 			url = "https://www.reddit.com" + post['data']['permalink'] + ".json"
 
 			url_response = requests.get(url, headers = {'User-agent': 'floffbot'})
@@ -488,9 +520,29 @@ class HypePredictor(InfoContainer):
 
 	def _lines_per_update(self):
 		return 3
-
+	
+	def prettyprint(self):
+		print("{} - {}".format(self._container_type, self._ticker_id))
+		for key, value in self._data_lists.items():
+			print(key)
+			
+			year = -1
+			month = -1
+			day = -1
+			for item in value:
+				date = item[0]
+				if date.year != year or date.month != month or date.day != day:
+					year = date.year
+					month = date.month
+					day = date.day
+					print("\t * {}-{}-{}".format(year, month, day))
+				print("\t\t   {}:{}:{}".format(date.hour, date.minute, date.second))
+				for line in item[1]:
+					print("\t\t\t   {} - {}".format(line, item[1][line]))
+			
 	def countwords(self, my_string):
 		"""refactor to functions at some point"""
+		# thanks internet
 
 		output = []
 
@@ -507,12 +559,6 @@ class HypePredictor(InfoContainer):
 		for word in output:
 			if word in self._watchlist:
 				my_dict.update({word: output.count(word)})
-
-		# Print a formatted table of results
-		#print("\n{:10}{}".format("Word", "Count") + "\n" + "-" * 15)
-
-		#for key, value in my_dict.items():
-		#    print("{:10}{:^5}".format(key, value))
 
 		return my_dict
 
