@@ -3,9 +3,10 @@ from systemmanager import SystemManager
 def main():
 	datalist = "datalist_updated.csv"
 	manager = SystemManager(datalist)
-	#manager.prettyprint()
+	
 	manager.update()
 	manager.store()
+	#manager.prettyprint()
 
 if __name__ == '__main__':
 	main()

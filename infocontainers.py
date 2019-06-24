@@ -1,7 +1,12 @@
-import os, sys, requests
+import os, sys, requests, string, json, logging
 from datetime import datetime, timedelta
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import matplotlib.pyplot as plt	
+from collections import Counter
+
+dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
+logging.basicConfig(filename="{}/logging.log".format(dirname), level=logging.ERROR)
+
 
 class InfoContainer:
 
@@ -44,6 +49,7 @@ class InfoContainer:
 						self._add_data_to_lists(i, date, data)					
 					except Exception as e:
 						print("Error in {}:{}._add_data_to_lists: {}".format(self._container_type, self._ticker_id, e))
+						logging.error("Error in {}:{}._add_data_to_lists: {}".format(self._container_type, self._ticker_id, e))
 						self._errors = True
 						return
 					i += self._lines_per_update()
@@ -75,6 +81,7 @@ class InfoContainer:
 	def write_to_file(self):
 		if self._errors:
 			print("Previosly encountered error. Returning.")
+			logging.error("Previosly encountered error. Returning.")
 			return
 		try:		
 			s = ""
@@ -98,6 +105,7 @@ class InfoContainer:
 			open(self.file_path(), 'w').write(s)
 		except Exception as e:
 			print("Error in {}:{}.write_to_file: {}".format(self._container_type, self._ticker_id, e))
+			logging.error("Error in {}:{}.write_to_file: {}".format(self._container_type, self._ticker_id, e))
 	# General method for plotting simple containers. 
 	# Must be overridden for most containers to work.
 	def plot(self, savefile=None):
@@ -135,6 +143,7 @@ class InfoContainer:
 			self._elements += 1
 		except Exception as e:
 			print("Error in {}:{}.update: {}".format(self._container_type, self._ticker_id, e))
+			logging.error("Error in {}:{}.update: {}".format(self._container_type, self._ticker_id, e))
 			self._errors = True
 	'''
 		returns: a list of information which is passed to _add_data_to_lists
@@ -158,7 +167,7 @@ class InfoContainer:
 		raise NotImplementedError
 
 	def folder_path(self):
-		return NotImplementedError
+		return os.path.join(self.directory_location(), self.folder_location())
 
 	def file_path(self):
 		return os.path.join(self.folder_path(), self._ticker_id)
@@ -294,7 +303,7 @@ class SubredditSentimentAverageContainer(InfoContainer):
 
 			host = fig.add_subplot(111)
 			host.set_ylim(0,1)
-			#print(tit_pos)
+
 			par1 = host.twinx()
 			host.set_title(str(self) + " " + key)
 			host.set_xlabel("date")
@@ -360,9 +369,6 @@ class SubredditSentimentAverageContainer(InfoContainer):
 			average_title = self._average_scores(average_title, title_score)
 			average_comment = self._average_scores(average_comment, average_comment_score)
 			
-			#print("Average comment score: {}".format(average_comment))
-			#print("Average title score: {}".format(average_title))
-			#print("Average selftext score: {}".format(average_selftext))
 
 		return self._score_to_list(average_title) + self._score_to_list(average_selftext) + self._score_to_list(average_comment)
 
@@ -401,4 +407,162 @@ class SubredditSentimentAverageContainer(InfoContainer):
 
 	def folder_path(self):
 		return os.path.join(self.directory_location(), self.folder_location())
+
+class HypePredictor(InfoContainer):
+
+	def __init__(self, parent_container, name):
+		
+		self._limit = 100
+		self._watchlist_file = "all_cryptos.csv"
+		self._posts = []
+		self._comments = []
+		super().__init__("HypePredictor", parent_container, name)
+		
+		self._data_lists["posts"] = self._posts
+		self._data_lists["comments"] = self._comments
+		# Name : CODE		
+		self._watchlist = {}
+		with open(self._watchlist_file) as file:
+			for line in file:
+				line = line.lower()
+				data = line.strip().split(",")
+				code = data[0]
+				for word in data:
+					self._watchlist[word] = code
+
+
+	def _get_update_data(self, date):
+		total = Counter({})
+		total_comments = Counter({})
+
+
+		request_string = 'https://www.reddit.com/r/{}/new/.json?limit={}'.format(self._ticker_id, self._limit)
+		response = requests.get(request_string, headers = {'User-agent': 'floffbot'})
+		data = response.json()
+
+		
+		for post in data['data']['children']:
+			selftext = post['data']['selftext']
+			selftext_count = Counter(self.countwords(selftext.lower()))
+			title = post['data']['title']
+			title_count = Counter(self.countwords(title.lower()))
+
+			total += selftext_count + title_count
+			url = "https://www.reddit.com" + post['data']['permalink'] + ".json"
+
+			url_response = requests.get(url, headers = {'User-agent': 'floffbot'})
+			url_data = url_response.json()
+			
+			for url_comment in url_data[1]['data']['children']:
+				try:
+					comment = url_comment['data']['body']
+					#comment_score = self._sentiment_analyzer_scores(comment)
+					total_comments += Counter(self.countwords(comment.lower()))
+					#average_comment_score = self._average_scores(average_comment_score, comment_score)
+				except:
+					continue
+		
+		request_string = 'https://www.reddit.com/r/{}/top/.json?limit={}'.format(self._ticker_id, self._limit)
+		response = requests.get(request_string, headers = {'User-agent': 'floffbot'})
+		data = response.json()
+
+		
+		for post in data['data']['children']:
+			selftext = post['data']['selftext']
+			selftext_count = Counter(self.countwords(selftext.lower()))
+			title = post['data']['title']
+			title_count = Counter(self.countwords(title.lower()))
+
+			total += selftext_count + title_count
+			url = "https://www.reddit.com" + post['data']['permalink'] + ".json"
+
+			url_response = requests.get(url, headers = {'User-agent': 'floffbot'})
+			url_data = url_response.json()
+			
+			for url_comment in url_data[1]['data']['children']:
+				try:
+					comment = url_comment['data']['body']
+					#comment_score = self._sentiment_analyzer_scores(comment)
+					total_comments += Counter(self.countwords(comment.lower()))
+					#average_comment_score = self._average_scores(average_comment_score, comment_score)
+				except:
+					continue
+
+		out = [str(dict(total)).replace(",","ÅÅ"), str(dict(total_comments)).replace(",","ÅÅ")]
+		return out
+
+	def _add_data_to_lists(self, i, date, data):
+		p1 = data[i+1].replace("ÅÅ",",")
+		json_acceptable_string = p1.replace("'", "\"")
+		d = json.loads(json_acceptable_string)
+
+		posts = (date, d)
+		
+		p2 = data[i+2].replace("ÅÅ",",")
+		json_acceptable_string = p2.replace("'", "\"")
+		d2 = json.loads(json_acceptable_string)
+
+		comments = (date, d2)
+		
+		self._posts.append(posts)
+		self._comments.append(comments)
+
+	def _get_write_info(self, i):
+		posts = self._posts[i]
+		comments = self._comments[i]
+		
+		date = posts[0]
+		posts_txt = str(posts[1]).replace(",","ÅÅ")
+		comment_txt = str(comments[1]).replace(",","ÅÅ")
+
+		return "{}:{}:{},{},{}".format(date.hour, date.minute, date.second, posts_txt, comment_txt)
+
+
+	def _lines_per_update(self):
+		return 3
+	
+	def prettyprint(self):
+		print("{} - {}".format(self._container_type, self._ticker_id))
+		for key, value in self._data_lists.items():
+			print(key)
+			
+			year = -1
+			month = -1
+			day = -1
+			for item in value:
+				date = item[0]
+				if date.year != year or date.month != month or date.day != day:
+					year = date.year
+					month = date.month
+					day = date.day
+					print("\t * {}-{}-{}".format(year, month, day))
+				print("\t\t   {}:{}:{}".format(date.hour, date.minute, date.second))
+				for line in item[1]:
+					print("\t\t\t   {} - {}".format(line, item[1][line]))
+			
+	def countwords(self, my_string):
+		"""refactor to functions at some point"""
+		# thanks internet
+
+		output = []
+
+		# remove punctuation from string
+		for char in my_string:
+			if char not in string.punctuation:
+				output.append(char)
+
+		# convert string to list
+		output = ("".join(output)).split()
+
+		my_dict = {}
+		# create dictionary from list and put word count as value
+		for word in output:
+			if word in self._watchlist:
+				my_dict.update({word: output.count(word)})
+
+		return my_dict
+
+	def folder_location(self):
+		return "subreddit_hype_predictor"
+
 
