@@ -24,11 +24,11 @@ class SystemManager:
 	def _init_from_file(self, init_file):
 		self.new('HypePredictor', 'CryptoCurrency')
 		self.new('HypePredictor', 'CryptoMarkets')
-		
+
 		with open(os.path.join(self.directory_location(), init_file), 'r') as file:
 			for line in file:
 				data = line.split(",")
-				
+				print("Starting")
 				if line.strip()[0] == '#':
 					continue
 		
@@ -42,12 +42,12 @@ class SystemManager:
 				twitter = data[4].strip()			# Twitter account
 				
 				if subreddit != "None" and subreddit != "":
-					#self.new("Subreddit", subreddit)
-					#self.new("SubredditSentimentAverage", subreddit)
+					self.new("Subreddit", subreddit)
+					self.new("SubredditSentimentAverage", subreddit)
 					pass
 
 				if coin_code != "None" and coin_code != "":
-					#self.new("Marketcap", coin_code)
+					self.new("Marketcap", coin_code)
 					pass
 
 				if twitter != "None" and twitter != "":
