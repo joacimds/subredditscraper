@@ -6,7 +6,7 @@ def main():
 	
 	manager.update()
 	manager.store()
-	manager.prettyprint()
+	#manager.prettyprint()
 
 if __name__ == '__main__':
 	main()
