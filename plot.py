@@ -17,7 +17,7 @@ def main():
 	
 	manager = SystemManager(datalist)
 	
-	#print(manager.container_keys())
+	print(manager.container_keys())
 	if plot_all:
 		for key in manager.container_keys():
 			print(key)
