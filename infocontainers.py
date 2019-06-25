@@ -286,18 +286,32 @@ class SubredditSentimentAverageContainer(InfoContainer):
 	
 	def plot(self, savefile=None):
 		
-		
+		tot_neg = []
+		tot_pos = []
+		start = True
 		for key in ["title_sentiment", "text_sentiment", "comment_sentiment"]:
 			tit_neg = []
 			tit_neu = []
 			tit_pos = []
 			tit_compound = []
+			tit_neg_neu_pos = []
+			
+			i = 0
 			for data in self._data_lists[key]:
 				tit_neg.append((data[0], float(data[1]["neg"])))
 				tit_neu.append((data[0], float(data[1]["neu"])))
 				tit_pos.append((data[0], float(data[1]["pos"])))
 				tit_compound.append((data[0], float(data[1]["compound"])))
+				if start:
+					tot_neg.append((data[0], float(data[1]["neg"])))
+					tot_pos.append((data[0], float(data[1]["pos"])))
+				else:
+					tot_neg[i] = (tot_neg[i][0], tot_neg[i][1] + float(data[1]["neg"]))
+					tot_pos[i] = (tot_pos[i][0], tot_pos[i][1] + float(data[1]["pos"]))
 				
+				i += 1
+
+			start = False
 				
 			fig = plt.figure()
 
@@ -320,6 +334,26 @@ class SubredditSentimentAverageContainer(InfoContainer):
 			#par1.yaxis.label.set_color(p3.get_color())
 			self.save_plot(savefile + "_" + key)
 
+		fig = plt.figure()
+
+		host = fig.add_subplot(111)
+		host.set_ylim(0,1)
+
+		par1 = host.twinx()
+		host.set_title(str(self) + " " + "total")
+		host.set_xlabel("date")
+		host.set_ylabel("Pos/Neg trend")
+		#par1.set_ylabel("neu")
+
+		p1, = host.plot(*zip(*tot_neg), color='red', label="Negative")
+		p2, = host.plot(*zip(*tot_pos), color='green', label="Positive")
+		#p3, = par1.plot(*zip(*tit_compound), color='gray', label="Compound title")
+		plt.gcf().autofmt_xdate()
+		lns = [p1, p2]
+		host.legend(handles=lns, loc='best')
+		host.yaxis.label.set_color(p1.get_color())
+		#par1.yaxis.label.set_color(p3.get_color())
+		self.save_plot(savefile + "_" + "total")
 
 	def _average_scores(self, score1, score2):
 		if not score1 or not score2:

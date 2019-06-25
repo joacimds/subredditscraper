@@ -28,7 +28,6 @@ class SystemManager:
 		with open(os.path.join(self.directory_location(), init_file), 'r') as file:
 			for line in file:
 				data = line.split(",")
-				print("Starting")
 				if line.strip()[0] == '#':
 					continue
 		
