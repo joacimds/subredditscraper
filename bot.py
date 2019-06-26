@@ -9,8 +9,12 @@ def main():
 	#manager.prettyprint()
 
 if __name__ == '__main__':
-	main()
-
+	dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
+	logging.basicConfig(filename="{}/logging.log".format(dirname), level=logging.ERROR)
+	try:
+		main()
+	except Exception as e:
+		logging.error("Main not functioning: {}".format(e))
 
 #date = SystemManager("datalist.txt")
 #date.new("Subreddit", "bitcoin")
