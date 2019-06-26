@@ -447,7 +447,7 @@ class HypePredictor(InfoContainer):
 	def __init__(self, parent_container, name):
 		
 		self._limit = 100
-		self._watchlist_file = "all_cryptos.csv"
+		self._watchlist_file = os.path.join(self.directory_location(), "all_cryptos.csv")
 		self._posts = []
 		self._comments = []
 		super().__init__("HypePredictor", parent_container, name)
