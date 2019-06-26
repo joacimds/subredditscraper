@@ -1,5 +1,5 @@
 from systemmanager import SystemManager
-import sys, os
+import sys, os, logging
 def main():
 	datalist = "datalist_updated.csv"
 	manager = SystemManager(datalist)
