@@ -10,8 +10,8 @@ A super simple subreddit scraper. Implemented to track cryptocurrency subreddits
 
 #### Usage:
 
+_bot.py_ -
+This is the main-file to run
+
 _datalist.txt_ - 
 This file contains necessary information about cryptocurrencies.  
-
-
-Main - _bot.py_

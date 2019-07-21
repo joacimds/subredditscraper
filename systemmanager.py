@@ -106,7 +106,7 @@ class SystemManager:
 
 		return None
 
-	def prettyprint(self):
+	def prettPrint(self):
 		for container in self._info_containers.values():
 			container.prettyprint()
 

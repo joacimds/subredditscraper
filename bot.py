@@ -1,5 +1,6 @@
-from systemmanager import SystemManager
 import sys, os, logging
+
+from systemmanager import SystemManager
 
 
 def main():
@@ -8,10 +9,10 @@ def main():
 	
 	manager.update()
 	manager.store()
-	#manager.prettyprint()
+	#manager.prettyPrint()
 
 
-if __name__ == '__main__':
+if __name__ is '__main__':
 	dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
 	logging.basicConfig(filename="{}/logging.log".format(dirname), level=logging.ERROR)
 	try:
