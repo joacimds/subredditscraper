@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from infocontainers import SubredditContainer, MarketcapContainer, SubredditSentimentAverageContainer, HypePredictor
 
 class SystemManager:
-	
+
 	def ValiDate(date):
 		try:
 			datetime.strptime(date, '%m/%d/%y')

@@ -1,5 +1,7 @@
 from systemmanager import SystemManager
 import sys, os, logging
+
+
 def main():
 	datalist = "datalist_updated.csv"
 	manager = SystemManager(datalist)
@@ -7,6 +9,7 @@ def main():
 	manager.update()
 	manager.store()
 	#manager.prettyprint()
+
 
 if __name__ == '__main__':
 	dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
